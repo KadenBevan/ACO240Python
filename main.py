@@ -73,5 +73,21 @@ class Observation():
         return str((self.get_storm().get_name(), self.get_date(), self.get_time(), self.get_latitude(), self.get_longitude(), self.get_max_wind(), self.get_min_pressure()))
 
 
-data = csv.DictReader("storms_three_years.csv")
-print(data)
+data = csv.DictReader(open("C:/Users/ktbevan/Downloads/storms_three_years.csv"))
+origin_year_dict = dict()
+
+for line in data:
+    origin = line["ID"][:2]
+    year = line["Date"][:4]
+    storm = Storm(line["ID"], origin, line["ID"][2:4], year, line["Name"].strip())
+    observation = Observation(storm, line["Date"], line["Time"], line["Status"], line["Latitude"], line["Longitude"], line["Maximum Wind"], line["Minimum Pressure"])
+    if not origin_year_dict.get((origin, year)):
+        # create first entry
+        origin_year_dict[(origin, year)] = [observation]
+    else:
+        # add storm to entry list
+        origin_year_dict[(origin, year)].append(observation)
+
+#print(origin_year_dict)
+
+
