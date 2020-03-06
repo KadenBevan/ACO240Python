@@ -49,10 +49,10 @@ class Observation():
         return self._storm
     
     def get_date(self):
-        return self._date
+        return int(self._date)
 
     def get_time(self):
-        return self._time
+        return int(self._time)
 
     def get_status(self):
         return self._status
@@ -64,10 +64,10 @@ class Observation():
         return self._longitude
 
     def get_max_wind(self):
-        return self._max_wind
+        return int(self._max_wind)
 
     def get_min_pressure(self):
-        return self._min_pressure
+        return int(self._min_pressure)
 
     def __repr__(self):
         return str((self.get_storm().get_name(), self.get_date(), self.get_time(), self.get_latitude(), self.get_longitude(), self.get_max_wind(), self.get_min_pressure()))
@@ -98,7 +98,7 @@ for line in data:
         if not found_storm:
             storm.add_observation(observation)
             origin_year_dict[(origin, year)].append(storm)
-    
+file.close()   
 # display OUTPUT 1
 print("OUTPUT 1")
 keys = []
@@ -144,3 +144,49 @@ for key in sorted(year_obs_dict.keys(), reverse=True):
         print(str(m[0])+" "+str(m[1]) + " " + str(m[2]))
     max_list = []
     print()
+
+
+file = open("./storms_three_years.csv")
+data = csv.DictReader(file)
+status_dict = {}
+
+for line in data:
+    # {ST: [(storm, [observation])]}
+    origin = line["ID"][:2]
+    year = line["Date"][:4]
+    name = line["Name"].strip()
+    storm = Storm(line["ID"], origin, line["ID"][2:4], year, name)
+    observation = Observation(storm, line["Date"], line["Time"], line["Status"], line["Latitude"], line["Longitude"], line["Maximum Wind"], line["Minimum Pressure"])
+    status = line["Status"].strip()
+    # if its the first for that status
+    if not status_dict.get(status):
+        status_dict[status] = [(storm, [observation])]
+    else:
+        found = False
+        for item in status_dict[status]:
+            if item[0].get_name() == storm.get_name():
+                item[1].append(observation)
+                found = True
+        if not found:
+            status_dict[status].append((storm, [observation]))
+
+print("OUTPUT 3")
+ordered_status_keys = ["HU", "TS", "SS", "TD", "SD", "EX", "LO", "WV", "DB"]
+for key in ordered_status_keys:
+    num_storms = 0
+    if status_dict.get(key):
+        num_storms = len(status_dict[key])
+        print(key + " " + str(num_storms))
+        # sort by name
+        sorted_storm_names = []
+        for storm in status_dict[key]:
+            sorted_storm_names.append(storm[0].get_name())
+        sorted_storm_names.sort(reverse=False)
+        for name in sorted_storm_names:
+            for storm in status_dict[key]:
+                if name == storm[0].get_name():
+                    storm[1].sort(key=lambda k: (k.get_date(), k.get_time()))
+                    print(str(storm[0].get_name()) + " " + str(len(storm[1])) +  " " + str((storm[1][-1].get_date(), storm[1][-1].get_time())) + " " + str((storm[1][0].get_date(), storm[1][0].get_time())))
+        print()        
+    else:
+        print(key + " " + str(num_storms)+ "\n")
